@@ -17,6 +17,8 @@ Where clients.Id = @id";
     private string DoCarExists = "Select 1 From cars Where cars.ID = @id";
 
     private string CarPriceRate = "Select cars.PricePerDay From cars where cars.Id = @id";
+    
+    
 
     private string AddClientCommand = "Insert into clients (ID, FirstName, LastName, \"Address\") values (@id, @f, @l, @a);";
     
@@ -62,13 +64,15 @@ Where clients.Id = @id";
 
     public async Task<bool> AddClient(ClientDTO clientDto)
     {
+        int id = await GetMaxFrom("clients", "ID");
+        
         using (SqlConnection connection = new SqlConnection(_configuration.GetConnectionString("Default")))
         {
             connection.Open();
           
             using (SqlCommand command = new SqlCommand(AddClientCommand, connection))
             {
-                command.Parameters.AddWithValue("@id",await GetMaxClientId() + 1);
+                command.Parameters.AddWithValue("@id", id + 1);
                 command.Parameters.AddWithValue("@n", clientDto.FirstName);
                 command.Parameters.AddWithValue("@l", clientDto.LastName);
                 command.Parameters.AddWithValue("a", clientDto.Adress);
@@ -79,8 +83,35 @@ Where clients.Id = @id";
             
         }
     }
-    
-    
+
+    public async Task<bool> AddRental(int clientId ,int carId, DateTime from, DateTime to, int price)
+    {
+
+        int id = await GetMaxFrom("car_rental", "ID");
+
+        string insertInto =
+            "Insert Into car_rentals (ID, CarId, ClientId, DateFrom, DateTo, TotalPrice) values (@id, @carid, @clientId, @from, @to, @price)";
+        
+        using (SqlConnection connection = new SqlConnection(_configuration.GetConnectionString("Default")))
+        {
+            connection.Open();
+          
+            using (SqlCommand command = new SqlCommand(insertInto, connection))
+            {
+                command.Parameters.AddWithValue("@id", id + 1);
+                command.Parameters.AddWithValue("@carId", carId);
+                command.Parameters.AddWithValue("@clientId", clientId);
+                command.Parameters.AddWithValue("@from", from);
+                command.Parameters.AddWithValue("@to", to);
+                command.Parameters.AddWithValue("price", price);
+                var result = command.ExecuteNonQuery();
+                return true;
+            }
+            
+        }
+        
+    }
+
 
     public async Task<bool> CarExists(int carId)
     {
@@ -112,6 +143,7 @@ Where clients.Id = @id";
             connection.Open();
             using (SqlCommand command = new SqlCommand(CarPriceRate, connection))
             {
+                command.Parameters.AddWithValue("@id", carId);
                 var result = command.ExecuteScalar();
                 
                 if (result != null && result != DBNull.Value)
@@ -125,7 +157,30 @@ Where clients.Id = @id";
             }
         }
     }
-
+    
+    
+    public async Task<int> GetMaxFrom(string table, string column)
+    {
+        string maxCommand = "Select Max(" + column +") from " + table;
+        
+        using (SqlConnection connection = new SqlConnection(_configuration.GetConnectionString("Default")))
+        {
+            connection.Open();
+            using (SqlCommand command = new SqlCommand(maxCommand, connection))
+            {
+                var result = command.ExecuteScalar();
+                
+                if (result != null && result != DBNull.Value)
+                {
+                    return Convert.ToInt32(result);
+                }
+                else
+                {
+                    return -1; // lub inna wartość domyślna
+                }
+            }
+        }
+    }
     public async Task<int> GetMaxClientId()
     {
         string commnadReadMaxInt = "Select Max(id) from clients;";

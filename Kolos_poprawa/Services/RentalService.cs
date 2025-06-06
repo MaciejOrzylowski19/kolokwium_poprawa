@@ -63,8 +63,22 @@ public class RentalService : IRentalService
         }
 
         int days = (rental.DateTo - rental.DateFrom).Days;
+        int price = await _rentalRepository.GetCarPriceRate(rental.CarId);
+
+        int id = 9;//nie dalem rady 
+
+        await _rentalRepository.AddClient(new ClientDTO()
+        {
+            Id = 0,
+            FirstName = rental.Client.FirstName,
+            LastName = rental.Client.LastName,
+            Adress = rental.Client.Address,
+            Rentals = new List<RentalDTO>()
+        });
+
+        await _rentalRepository.AddRental(id, rental.CarId, rental.DateFrom, rental.DateTo, price);
         
-        Console.WriteLine(days);
+        
         return 1;
     }
     
