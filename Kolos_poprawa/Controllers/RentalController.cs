@@ -36,9 +36,18 @@ public class RentalController : ControllerBase
     {
 
         int r = await _rentalService.AddClient(clientRent);
-        
-        return Ok(r);
+
+        if (r == -1)
+        {
+            return NotFound("Car not found");
+        }
+
+        if (r == -2)
+        {
+            return NotFound("invalid date");
+        }
+
+        return Ok();
     }
-    
     
 }

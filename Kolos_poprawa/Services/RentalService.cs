@@ -65,7 +65,7 @@ public class RentalService : IRentalService
         int days = (rental.DateTo - rental.DateFrom).Days;
         int price = await _rentalRepository.GetCarPriceRate(rental.CarId);
 
-        int id = 9;//nie dalem rady 
+        
 
         await _rentalRepository.AddClient(new ClientDTO()
         {
@@ -76,8 +76,9 @@ public class RentalService : IRentalService
             Rentals = new List<RentalDTO>()
         });
 
+        int id = await _rentalRepository.GetMaxFrom("clients", "id");
+
         await _rentalRepository.AddRental(id, rental.CarId, rental.DateFrom, rental.DateTo, price);
-        
         
         return 1;
     }
